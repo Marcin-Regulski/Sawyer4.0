@@ -19,83 +19,93 @@ from geometry_msgs.msg import (
     Quaternion
 )
 
-class Save_Positions(self, limb = "right", hover_distance = 0.3, tip_name = "right_gripper_tip"):
-    self._limb_name = limb # string
-    self._tip_name = tip_name # string
-    self._hover_distance = hover_distance # in meters
-    self._limb = intera_interface.Limb(limb)
-    self._gripper = intera_interface.Gripper()
-    # verify robot is enabled
-    print("Getting robot state... ")
-    self._rs = intera_interface.RobotEnable(intera_interface.CHECK_VERSION)
-    self._init_state = self._rs.state().enabled
-    print("Enabling robot... ")
-    self._rs.enable()
+class Save_Positions(object):
+    def __init__(self, limb="right", hover_distance = 0.3, tip_name = "right_gripper_tip"):
+        self._limb_name = limb # string
+        self._tip_name = tip_name # string
+        self._hover_distance = hover_distance # in meters
+        self._limb = intera_interface.Limb(limb)
+        self._gripper = intera_interface.Gripper()
+        self._sequence = []
+        # verify robot is enabled
+        print("Getting robot state... ")
+        self._rs = intera_interface.RobotEnable(intera_interface.CHECK_VERSION)
+        self._init_state = self._rs.state().enabled
+        print("Enabling robot... ")
+        self._rs.enable()
 
-def retract(self):
-    # retrieve current pose from endpoint
-    current_pose = self._limb.endpoint_pose()
-    ik_pose = Pose()
-    #ik_pose = current_pose
-    ik_pose.position.x = current_pose['position'].x
-    ik_pose.position.y = current_pose['position'].y
-    ik_pose.position.z = current_pose['position'].z
-    ik_pose.orientation.x = current_pose['orientation'].x
-    ik_pose.orientation.y = current_pose['orientation'].y
-    ik_pose.orientation.z = current_pose['orientation'].z
-    ik_pose.orientation.w = current_pose['orientation'].w
-    return ik_pose
+    def _retract(self):
+        # retrieve current pose from endpoint
+        current_pose = self._limb.endpoint_pose()
+        ik_pose = Pose()
+        #ik_pose = current_pose
+        ik_pose.position.x = current_pose['position'].x
+        ik_pose.position.y = current_pose['position'].y
+        ik_pose.position.z = current_pose['position'].z
+        ik_pose.orientation.x = current_pose['orientation'].x
+        ik_pose.orientation.y = current_pose['orientation'].y
+        ik_pose.orientation.z = current_pose['orientation'].z
+        ik_pose.orientation.w = current_pose['orientation'].w
+        return ik_pose
 
-def save_values_to_file(name,grip_in):
-    grip_widths = []
-    grip_widths = grip_in.split()
-    current_angles = self._limb.joint_angles()
-    cp = self._retract()
+    def save_sequence(self,name_seq):
+        while not rospy.is_shutdown():
+            f = open("/home/nitro/sawyer_ws/src/sawyer_gripper/src/poses/"+name_seq+"_sequence.txt","w+")
+            for i in range(0,len(self._sequence)):
+                f.write(self._sequence[i]+" ")
+            f.close()
+            return
 
-    f = open("/home/nitro/sawyer_ws/src/sawyer_gripper/src/poses/"+name+".txt","w+")
-    f.write(str(cp))
+    def save_values_to_file(self,name,grip_in):
+        grip_widths = []
+        self._sequence.append(name)
+        grip_widths = grip_in.split()
+        current_angles = self._limb.joint_angles()
+        cp = self._retract()
 
-    f.write(str(current_angles['right_j6'])+"\n")
-    f.write(str(current_angles['right_j5'])+"\n")
-    f.write(str(current_angles['right_j4'])+"\n")
-    f.write(str(current_angles['right_j3'])+"\n")
-    f.write(str(current_angles['right_j2'])+"\n")
-    f.write(str(current_angles['right_j1'])+"\n")
-    f.write(str(current_angles['right_j0'])+"\n")
-    f.write(grip_widths[0]+"\n"+grip_widths[1]+"\n")
-    f.close()
- 
+        f = open("/home/nitro/sawyer_ws/src/sawyer_gripper/src/poses/"+name+".txt","w+")
+        f.write(str(cp)+"\n")
+        f.write("Joint angles:\n")
+        f.write(str(current_angles['right_j6'])+"\n")
+        f.write(str(current_angles['right_j5'])+"\n")
+        f.write(str(current_angles['right_j4'])+"\n")
+        f.write(str(current_angles['right_j3'])+"\n")
+        f.write(str(current_angles['right_j2'])+"\n")
+        f.write(str(current_angles['right_j1'])+"\n")
+        f.write(str(current_angles['right_j0'])+"\n")
+        f.write("Gripper widths - before and after: \n")
 
-'''
-def save_gripper_width(name,gripper):
-    gripper_beg,gripper_end = gripper.split()
-    f = open("/home/nitro/sawyer_ws/src/sawyer_gripper/src/poses/"+name+"_gripper.txt","w+")
-    f.write(gripper_beg+"\n"+gripper_end)
-    f.close()
-'''
+        grip_widths = ['0' if x == 'c' else x for x in grip_widths]
+        grip_widths = ['MAX_POSITION' if x == 'o' else x for x in grip_widths]
 
-def get_values(name):
-    file_location = "/home/nitro/sawyer_ws/src/sawyer_gripper/src/poses/"+name+"_pose.txt"
-            
-    with open(file_location, "r") as f:
-        content = f.readlines()
-        content = [x.strip() for x in content]
-        del content[0]
-        del content[3]
-        for i in range(len(content)):
-            item = content[i]
-            content[i] = float(item[3:])
+        f.write(grip_widths)
+        f.close()
 
-    Pos = Pose(position = Point(x = content[0], y = content[1], z= content[2]), 
-                    orientation = Quaternion(x=content[3],y=content[4],z=content[5],w=content[6]))
-    f.close()
-
-    return Pos
+def get_info(sp):
+    while not rospy.is_shutdown():
+        name = raw_input("Name of position: ")
+        grippers_in = raw_input ("Set up width of grippers for beggining and end of position - leave space between values (c- close /o - open): ")
+        sp.save_values_to_file(name,grippers_in)
+        break
 
 
 def main():
+    rospy.init_node("Save_sequence")
 
-
+    sp = Save_Positions()
+    while not rospy.is_shutdown():
+        raw_input( "Hello! Move Sawyer to the first location and click enter to save it!")
+        get_info(sp)
+        while True:
+            decision = raw_input("Would you like to add new position or save sequence? p/s ")
+            if decision == 'p':
+                get_info(sp)
+            elif decision == 's':
+                print sp._sequence
+                name_seq = raw_input("Name of sequence: ")
+                sp.save_sequence(name_seq)
+                break
+            
 
 if __name__ == '__main__':
     sys.exit(main())

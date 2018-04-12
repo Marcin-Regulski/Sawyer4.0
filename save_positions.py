@@ -18,7 +18,7 @@ from geometry_msgs.msg import (
     Point,
     Quaternion
 )
-
+    
 def retract(Limb,hover_distance):
     limb = intera_interface.Limb(Limb)
     # retrieve current pose from endpoint
@@ -40,13 +40,13 @@ def save_joints_to_file(Limb, name):
     current_angles = limb.joint_angles()
 
     f = open("/home/nitro/sawyer_ws/src/sawyer_gripper/src/poses/"+name+"_joints.txt","w+")
-    f.write(str(current_angles['right_j6'])+"\n")
-    f.write(str(current_angles['right_j5'])+"\n")
-    f.write(str(current_angles['right_j4'])+"\n")
-    f.write(str(current_angles['right_j3'])+"\n")
-    f.write(str(current_angles['right_j2'])+"\n")
-    f.write(str(current_angles['right_j1'])+"\n")
     f.write(str(current_angles['right_j0'])+"\n")
+    f.write(str(current_angles['right_j1'])+"\n")
+    f.write(str(current_angles['right_j2'])+"\n")
+    f.write(str(current_angles['right_j3'])+"\n")
+    f.write(str(current_angles['right_j4'])+"\n")
+    f.write(str(current_angles['right_j5'])+"\n")
+    f.write(str(current_angles['right_j6'])+"\n")
     f.close()
 
 def save_pose_to_file(name,cp):

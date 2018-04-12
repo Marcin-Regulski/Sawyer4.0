@@ -37,21 +37,22 @@ from intera_core_msgs.srv import (
     SolvePositionIK,
     SolvePositionIKRequest,
 )
-
+'''
 def constrain(x, min_x, max_x):
     return min(max_x, max(x, min_x))
-
+'''
 def get_pose(name):
-    file_location = "/home/nitro/sawyer_ws/src/sawyer_gripper/src/poses/"+name+"_pose.txt"
+    file_location = "/home/nitro/sawyer_ws/src/sawyer_gripper/src/poses/"+name+".txt"
     print name        
     with open(file_location, "r") as f:
         content = f.readlines()
         content = [x.strip() for x in content]
-        del content[0]
-        del content[3]
-        for i in range(len(content)):
-            item = content[i]
-            content[i] = float(item[3:])
+    f.close()
+    content = content[1:-11]
+    del content[3]
+    for i in range(len(content)):
+        item = content[i]
+        content[i] = float(item[3:])
 
     overhead_orientation = Quaternion(
                              x=-0.00142460053167,
@@ -60,24 +61,38 @@ def get_pose(name):
                              w=0.00253311793936)
     Pos = Pose(position = Point(x = content[0], y = content[1], z= content[2]), 
                     orientation = overhead_orientation)
-    f.close()
-
     return Pos
 
+def get_joint_angles(name):
+    file_location = "/home/nitro/sawyer_ws/src/sawyer_gripper/src/poses/"+name+".txt"
+    with open(file_location, "r") as f:
+        content = f.readlines()
+        content = [x.strip() for x in content]
+    f.close()
+    content = content[10:-3]
+    joint_angles = {}
+    for i in range(len(content)):
+        joint_angles['right_j'+str(6-i)] = float(content[i])
+    joint_angles['right_j1'] = 0
+    return joint_angles
+    
+
 def approach():
+    name = 'Test1'
     limb_mv = intera_interface.Limb("right")
+    joint_angles = get_joint_angles(name)
     overhead_orientation = Quaternion(
                              x=-0.00142460053167,
                              y=0.999994209902,
                              z=-0.00177030764765,
                              w=0.00253311793936)
-    approach = get_pose("PCB")
+    #approach = get_pose(name)
     # approach with a pose the hover-distance above the requested pose
     #approach.position.z = approach.position.z
-    joint_angles = limb_mv.ik_request(approach, "right_hand")
+    #joint_angles = limb_mv.ik_request(approach, "right_hand")
     limb_mv.set_joint_position_speed(0.1)
     limb_mv.move_to_joint_positions(joint_angles)
-
+'''
 def ik_service_client(limb = "right", tip_name = "right_gripper_tip"):
     limb_mv = intera_interface.Limb(limb)
     #gripper = intera_interface.Gripper()
@@ -163,7 +178,7 @@ def ik_service_client(limb = "right", tip_name = "right_gripper_tip"):
         return False
 
     return True
-
+'''
 def main():
     """RSDK Inverse Kinematics
     A simple example of using the Rethink Inverse Kinematics
