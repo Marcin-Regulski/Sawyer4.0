@@ -78,7 +78,7 @@ def get_joint_angles(name):
     
 
 def approach():
-    name = 'Test1'
+    name = 'Test'
     limb_mv = intera_interface.Limb("right")
     joint_angles = get_joint_angles(name)
     overhead_orientation = Quaternion(

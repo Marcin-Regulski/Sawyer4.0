@@ -12,6 +12,10 @@ import rospy
 import rospkg
 import intera_interface
 
+import imp
+
+flask_server= imp.load_source("Server", "/home/nitro/webapp/app.py")
+
 from geometry_msgs.msg import (
     PoseStamped,
     Pose,
@@ -78,7 +82,8 @@ class Save_Positions(object):
         grip_widths = ['0' if x == 'c' else x for x in grip_widths]
         grip_widths = ['MAX_POSITION' if x == 'o' else x for x in grip_widths]
 
-        f.write(grip_widths)
+        f.write(grip_widths[0]+"\n")
+        f.write(grip_widths[0]+"\n")
         f.close()
 
 def get_info(sp):

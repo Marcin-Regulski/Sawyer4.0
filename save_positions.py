@@ -96,7 +96,7 @@ def main():
 
     sequence = []
     rospy.init_node('save_positions')
-    hover_distance = 0.15
+    hover_distance = 0.135
     main_limb = "right"
     limb = intera_interface.Limb(main_limb)
 

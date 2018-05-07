@@ -26,11 +26,14 @@ def main():
     print limb
     current_angles = limb.joint_angles()
     starting_joint_angles = current_angles
-    starting_joint_angles['right_j6'] = 0
+    #starting_joint_angles['right_j6'] = 0
+    #grip = intera_interface.Gripper()
+    #grip.calibrate()
                              
     
     while not rospy.is_shutdown():
-
+        current_pose = limb.endpoint_pose()
+        print current_pose
         limb.move_to_joint_positions(starting_joint_angles,timeout = 5.0)
         question = "What width would you like to set the gripper?"
         choose = float(raw_input(question))
